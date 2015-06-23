@@ -15,13 +15,13 @@ This behavior is used to add selection capabilities on the context element.
 @group behaviors
 @homepage http://expandjs.com/elements/xp-selected-behavior
 
-@behavior xp-array-behavior http://expandjs.com/elements/xp-array-behavior
-@behavior xp-targeter-behavior http://expandjs.com/elements/xp-targeter-behavior
+@behavior xp-array-behavior http://expandjs.com/elements/xp-array-behavior#0.9.1
+@behavior xp-targeter-behavior http://expandjs.com/elements/xp-targeter-behavior#0.9.1
 
-@dependency polymer Polymer/polymer
-@dependency expandjs ExpandJS/expandjs
-@dependency xp-array-behavior ExpandJS/xp-array-behavior
-@dependency xp-targeter-behavior ExpandJS/xp-targeter-behavior
+@dependency polymer Polymer/polymer#^1.0.4
+@dependency expandjs ExpandJS/expandjs#0.9.1
+@dependency xp-array-behavior ExpandJS/xp-array-behavior#0.9.1
+@dependency xp-targeter-behavior ExpandJS/xp-targeter-behavior#0.9.1
 -->
 
 <link rel="import" href="../polymer/polymer.html">
@@ -71,7 +71,7 @@ This behavior is used to add selection capabilities on the context element.
         findIndex: function (identity, safe) {
             var self = this, item = self.findItem(identity, safe);
             if (item && self.indexAttribute) { return XP.getAttribute(item, self.indexAttribute) || null; }
-            if (item) { return XP.indexOf(self.items, item); }
+            if (item) { return XP.indexOf(self.items || [], item); }
             return null;
         },
 
@@ -84,7 +84,7 @@ This behavior is used to add selection capabilities on the context element.
          * @returns {Element}
          */
         findItem: function (identity, safe) {
-            return safe ? identity : XP.find(this.items, this._toDOMIdentity(identity)) || null;
+            return safe ? identity : XP.find(this.items || [], this._toDOMIdentity(identity)) || null;
         },
 
         /**
@@ -95,7 +95,7 @@ This behavior is used to add selection capabilities on the context element.
          * @returns {Array}
          */
         findItems: function (predicate) {
-            return XP.filter(this.items, this._toDOMPredicate(predicate));
+            return XP.filter(this.items || [], this._toDOMPredicate(predicate));
         },
 
         /**
@@ -109,7 +109,7 @@ This behavior is used to add selection capabilities on the context element.
         findLastIndex: function (identity, safe) {
             var self = this, item = self.findLastItem(identity, safe);
             if (item && self.indexAttribute) { return XP.getAttribute(item, self.indexAttribute) || null; }
-            if (item) { return XP.indexOf(self.items, item) || null; }
+            if (item) { return XP.indexOf(self.items || [], item) || null; }
             return null;
         },
 
@@ -122,7 +122,7 @@ This behavior is used to add selection capabilities on the context element.
          * @returns {Element}
          */
         findLastItem: function (identity, safe) {
-            return safe ? identity : XP.findLast(this.items, this._toDOMIdentity(identity)) || null;
+            return safe ? identity : XP.findLast(this.items || [], this._toDOMIdentity(identity)) || null;
         },
 
         /**
@@ -228,7 +228,7 @@ This behavior is used to add selection capabilities on the context element.
          * @returns {Element}
          */
         selectNext: function () {
-            var self = this, item = !self.multi ? XP.getNext(self.items, self.selection) : null;
+            var self = this, item = !self.multi ? XP.getNext(self.items || [], self.selection) : null;
             return item ? self.select(item, true) : null;
         },
 
@@ -239,7 +239,7 @@ This behavior is used to add selection capabilities on the context element.
          * @returns {Element}
          */
         selectPrevious: function () {
-            var self = this, item = !self.multi ? XP.getPrevious(self.items, self.selection) : null;
+            var self = this, item = !self.multi ? XP.getPrevious(self.items || [], self.selection) : null;
             return item ? self.select(item, true) : null;
         },
 
@@ -342,7 +342,7 @@ This behavior is used to add selection capabilities on the context element.
             if (!self.mutating) { self._setSelection(self.multi ? self.overwrite('selection', XP.map(self.selected, function (identity) { return self.findItem(identity); })) : (XP.isInput(self.selected, true) && self.findItem(self.selected)) || null); return self; }
 
             // CASE: Items changed
-            self._setSelection(self.multi ? self.overwrite('selection', XP.intersection(self.items, self.selection)) : self.findItem(self.selection));
+            self._setSelection(self.multi ? self.overwrite('selection', XP.intersection(self.items || [], self.selection)) : self.findItem(self.selection));
             self.selected = self.multi ? self.overwrite(self.selected, XP.map(function (item) { return self.findIndex(item, true); })) : (self.selection ? self.findIndex(self.selection, true) : null);
             self._setSelecting(self.selected !== selected && XP.isNullable(self.selected) !== XP.isNullable(selected));
             self._setMutating(false);
@@ -482,6 +482,22 @@ This behavior is used to add selection capabilities on the context element.
             },
 
             /**
+             * If set to true, the mutation observer is set.
+             *
+             * @attribute isMutated
+             * @type boolean
+             * @default false
+             * @notifies
+             * @readonly
+             */
+            isMutated: {
+                notify: true,
+                readOnly: true,
+                type: Boolean,
+                value: false
+            },
+
+            /**
              * The selector used to recognize selectable items.
              *
              * @attribute item-selector
@@ -500,12 +516,10 @@ This behavior is used to add selection capabilities on the context element.
              * @attribute items
              * @type Array
              * @notifies
-             * @readonly
              */
             items: {
                 notify: true,
-                type: Array,
-                value: function () { return []; }
+                type: Array
             },
 
             /**
@@ -518,22 +532,6 @@ This behavior is used to add selection capabilities on the context element.
             multi: {
                 observer: '_multiChanged',
                 reflectToAttribute: true,
-                type: Boolean,
-                value: false
-            },
-
-            /**
-             * If set to true, the mutation observer is set.
-             *
-             * @attribute mutable
-             * @type boolean
-             * @default false
-             * @notifies
-             * @readonly
-             */
-            mutable: {
-                notify: true,
-                readOnly: true,
                 type: Boolean,
                 value: false
             },
@@ -657,7 +655,15 @@ This behavior is used to add selection capabilities on the context element.
 
         // LISTENER
         attached: function () {
-            Polymer.XPSelectedBehaviorImp.mutated.apply(this);
+
+            // Vars
+            var self = this;
+
+            // Setting
+            if (!self.items) { self.items = []; } else { return; }
+
+            // Mutating
+            Polymer.XPSelectedBehaviorImp.mutated.apply(self);
         },
 
         // LISTENER
@@ -670,8 +676,8 @@ This behavior is used to add selection capabilities on the context element.
             self.overwrite('items', XP[self.deep ? 'getElements' : 'findElements'](Polymer.dom(self.context || self), self.itemSelector));
 
             // Setting
-            self._setMutating(self.mutable);
-            self._setMutable(true);
+            self._setMutating(self.isMutated);
+            self._setIsMutated(true);
 
             // Refreshing
             self._refresh();
