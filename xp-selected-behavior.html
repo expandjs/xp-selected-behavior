@@ -476,6 +476,7 @@ This behavior is used to add selection capabilities on the context element.
              */
             initialized: {
                 notify: true,
+                observer: '_initializedChanged',
                 readOnly: true,
                 type: Boolean,
                 value: false
@@ -641,6 +642,17 @@ This behavior is used to add selection capabilities on the context element.
         /*********************************************************************/
 
         // OBSERVER
+        _initializedChanged: function (post) {
+
+            // Vars
+            var self = this;
+
+            // Selecting
+            if (post && XP.isInput(self.defaultSelected, true)) { self.select(self.indexAttribute ? self.defaultSelected : XP.toIndex(self.defaultSelected, true)); return; }
+            if (post && XP.isInput(self.selected, true)) { self.select(self.selected); }
+        },
+
+        // OBSERVER
         _multiChanged: function (post) {
 
             // Vars
@@ -692,21 +704,12 @@ This behavior is used to add selection capabilities on the context element.
         _itemsHandler: function () {
 
             // Vars
-            var self        = this,
-                attribute   = self.indexAttribute,
-                initialized = self.initialized;
+            var self = this;
 
             // Setting
             self._setEmptyItems(self.items.length === 0);
-            self._setInitialized(self.initialized || !self.emptyItems);
+            self._setInitialized(self.initialized || self.items.length > 0);
             self._setSingleItem(self.items.length === 1);
-
-            // Checking
-            if (!initialized) { return; }
-
-            // Selecting
-            if (XP.isInput(self.defaultSelected, true)) { self.select(attribute ? self.defaultSelected : XP.toIndex(self.defaultSelected, true)); return; }
-            if (XP.isInput(self.selected, true)) { self.select(self.selected); }
         },
 
         // HANDLER
