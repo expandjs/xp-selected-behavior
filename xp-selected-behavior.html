@@ -199,7 +199,6 @@ This behavior is used to add selection capabilities on the context element.
             if (self.fire('xp-select', {firer: self, item: item, index: index, isMulti: self.multi, isSelected: true, isSwitchable: self.multi || self.switchable}, {cancelable: true}).defaultPrevented) { return null; }
 
             // Selecting
-            if (!self.multi) { self.unselect(self.selection, true); }
             if (!self.multi) { self._setSelection(item); } else { self.append('selection', item); }
             if (!self.multi) { self.selected = index; } else { self.append('selected', index); }
 
