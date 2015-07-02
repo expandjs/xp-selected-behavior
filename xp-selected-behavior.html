@@ -199,11 +199,10 @@ This behavior is used to add selection capabilities on the context element.
             if (self.fire('xp-select', {firer: self, item: item, index: index, isMulti: self.multi, isSelected: true, isSwitchable: self.multi || self.switchable}, {cancelable: true}).defaultPrevented) { return null; }
 
             // Selecting
-            if (!self.multi) { self._setSelection(item); } else { self.append('selection', item); }
-            if (!self.multi) { self.selected = index; } else { self.append('selected', index); }
-
-            // Setting
             self._setSelecting(true);
+            if (self.multi) { self.append('selection', item); } else { self._setSelection(item); }
+            if (self.multi) { self.append('selected', index); } else { self.selected = index; }
+            self._setSelecting(false);
 
             return item;
         },
@@ -294,11 +293,10 @@ This behavior is used to add selection capabilities on the context element.
             if (self.fire('xp-select', {firer: self, item: item, index: index, isMulti: self.multi, isSelected: false, isSwitchable: self.multi || self.switchable}, {cancelable: true}).defaultPrevented && !force) { return null; }
 
             // Unselecting
-            if (!self.multi) { self._setSelection(null); } else { self.pull('selection', item); }
-            if (!self.multi) { self.selected = null; } else { self.pull('selected', index); }
-
-            // Setting
             self._setSelecting(true);
+            if (self.multi) { self.pull('selection', item); } else { self._setSelection(null); }
+            if (self.multi) { self.pull('selected', index); } else { self.selected = null; }
+            self._setSelecting(false);
 
             return item;
         },
@@ -317,37 +315,6 @@ This behavior is used to add selection capabilities on the context element.
         },
 
         /*********************************************************************/
-
-        /**
-         * Refreshes the element.
-         *
-         * @method _refresh
-         * @returns {Element}
-         * @private
-         */
-        _refresh: function () {
-
-            // Vars
-            var self     = this,
-                selected = self.selected;
-
-            // Checking
-            if (self.multi !== XP.isArray(self.selected)) { return self; }
-
-            // CASE: Selection changed
-            if (self.selecting) { self._setSelecting(false); return self; }
-
-            // CASE: Selected changed
-            if (!self.mutating) { self._setSelection(self.multi ? self.overwrite('selection', XP.map(self.selected, function (identity) { return self.findItem(identity); })) : (XP.isInput(self.selected, true) && self.findItem(self.selected)) || null); return self; }
-
-            // CASE: Items changed
-            self._setSelection(self.multi ? self.overwrite('selection', XP.intersection(self.items || [], self.selection)) : self.findItem(self.selection));
-            self.selected = self.multi ? self.overwrite(self.selected, XP.map(function (item) { return self.findIndex(item, true); })) : (self.selection ? self.findIndex(self.selection, true) : null);
-            self._setSelecting(self.selected !== selected && XP.isNullable(self.selected) !== XP.isNullable(selected));
-            self._setMutating(false);
-
-            return self;
-        },
 
         /**
          * Returns a DOM identity representation of `target`.
@@ -681,20 +648,26 @@ This behavior is used to add selection capabilities on the context element.
         mutated: function () {
 
             // Vars
-            var self = this;
+            var self     = this,
+                selector = self.context || self;
+
+            // Checking
+            if (self.selecting) { return; }
 
             // Finding
-            self.overwrite('items', XP[self.deep ? 'getElements' : 'findElements'](Polymer.dom(self.context || self), self.itemSelector));
+            self.overwrite('items', XP[self.deep ? 'getElements' : 'findElements'](Polymer.dom(selector), self.itemSelector));
 
             // Setting
-            self._setMutating(self.isMutated);
+            if (self.isMutated) { self._setMutating(true); }
+            if (self.isMutated) { self._setSelection(self.multi ? self.overwrite('selection', XP.intersection(self.items, self.selection)) : self.findItem(self.selection)); }
+            if (self.isMutated) { self.selected = self.multi ? self.overwrite('selected', XP.map(self.selection, function (item) { return self.findIndex(item, true); })) : self.findIndex(self.selection, true); }
+            if (self.isMutated) { self._setMutating(false); }
+
+            // Annotating
             self._setIsMutated(true);
 
-            // Refreshing
-            self._refresh();
-
             // Observing
-            XP.onMutation(self.context || self, Polymer.XPSelectedBehaviorImp.mutated.bind(self));
+            XP.onMutation(selector, Polymer.XPSelectedBehaviorImp.mutated.bind(self));
         },
 
         /*********************************************************************/
@@ -715,8 +688,12 @@ This behavior is used to add selection capabilities on the context element.
         _selectedHandler: function () {
 
             // Vars
-            var self   = this._refresh(),
-                target = self.findTarget();
+            var self     = this,
+                changing = !self.mutating && !self.selecting,
+                target   = self.findTarget();
+
+            // Setting
+            if (changing) { self._setSelection(self.multi ? self.overwrite('selection', XP.map(self.selected, function (identity) { return self.findItem(identity); })) : (XP.isInput(self.selected, true) && self.findItem(self.selected)) || null); }
 
             // Propagating
             if (target) { target.selected = self.selected; }
