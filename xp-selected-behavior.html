@@ -19,9 +19,9 @@ This behavior is used to add selection capabilities on the context element.
 @behavior xp-targeter-behavior http://expandjs.com/elements/xp-targeter-behavior
 
 @dependency polymer Polymer/polymer#^1.0.0
-@dependency expandjs ExpandJS/expandjs#0.9.3
-@dependency xp-array-behavior ExpandJS/xp-array-behavior#0.9.3
-@dependency xp-targeter-behavior ExpandJS/xp-targeter-behavior#0.9.3
+@dependency expandjs ExpandJS/expandjs#0.9.4
+@dependency xp-array-behavior ExpandJS/xp-array-behavior#0.9.4
+@dependency xp-targeter-behavior ExpandJS/xp-targeter-behavior#0.9.4
 -->
 
 <link rel="import" href="../polymer/polymer.html">
@@ -163,18 +163,6 @@ This behavior is used to add selection capabilities on the context element.
         isUnselectable: function (identity, force, safe) {
             var self = this, item = self.findItem(identity, safe);
             return XP.isElement(item) && self.isSelected(item) && (force || self.multi || self.switchable);
-        },
-
-        /**
-         * Resets the selection.
-         *
-         * @method reset
-         * @returns {Element}
-         */
-        reset: function () {
-            var self = this;
-            self._setSelection(self.multi ? [] : null);
-            return self;
         },
 
         /**
@@ -613,9 +601,12 @@ This behavior is used to add selection capabilities on the context element.
             // Vars
             var self = this;
 
+            // Checking
+            if (!post) { return; }
+
             // Selecting
-            if (post && XP.isInput(self.defaultSelected, true)) { self.select(self.indexAttribute ? self.defaultSelected : XP.toIndex(self.defaultSelected, true)); return; }
-            if (post && XP.isInput(self.selected, true)) { self.select(self.selected); }
+            if (XP.isString(self.defaultSelected, true) || XP.isFinite(self.defaultSelected)) { self.select(self.indexAttribute ? self.defaultSelected : XP.toIndex(self.defaultSelected, true)); return; }
+            if (XP.isString(self.selected, true) || XP.isFinite(self.selected)) { self.select(self.selected); }
         },
 
         // OBSERVER
@@ -693,7 +684,7 @@ This behavior is used to add selection capabilities on the context element.
                 target   = self.findTarget();
 
             // Setting
-            if (changing) { self._setSelection(self.multi ? self.overwrite('selection', XP.map(self.selected, function (identity) { return self.findItem(identity); })) : (XP.isInput(self.selected, true) && self.findItem(self.selected)) || null); }
+            if (changing) { self._setSelection(self.multi ? self.overwrite('selection', XP.map(self.selected, function (identity) { return self.findItem(identity); })) : ((XP.isString(self.selected, true) || XP.isFinite(self.selected)) && self.findItem(self.selected)) || null); }
 
             // Propagating
             if (target) { target.selected = self.selected; }
