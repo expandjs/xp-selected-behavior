@@ -605,8 +605,8 @@ This behavior is used to add selection capabilities on the context element.
             if (!post) { return; }
 
             // Selecting
-            if (XP.isString(self.defaultSelected, true) || XP.isFinite(self.defaultSelected)) { self.select(self.indexAttribute ? self.defaultSelected : XP.toIndex(self.defaultSelected, true)); return; }
-            if (XP.isString(self.selected, true) || XP.isFinite(self.selected)) { self.select(self.selected); }
+            if (XP.isString(self.defaultSelected) || XP.isFinite(self.defaultSelected)) { self.select(self.indexAttribute ? self.defaultSelected : XP.toIndex(self.defaultSelected, true)); return; }
+            if (XP.isString(self.selected) || XP.isFinite(self.selected)) { self.select(self.selected); }
         },
 
         // OBSERVER
@@ -684,7 +684,7 @@ This behavior is used to add selection capabilities on the context element.
                 target   = self.findTarget();
 
             // Setting
-            if (changing) { self._setSelection(self.multi ? self.overwrite('selection', XP.map(self.selected, function (identity) { return self.findItem(identity); })) : ((XP.isString(self.selected, true) || XP.isFinite(self.selected)) && self.findItem(self.selected)) || null); }
+            if (changing) { self._setSelection(self.multi ? self.overwrite('selection', XP.map(self.selected, function (identity) { return self.findItem(identity); })) : ((XP.isString(self.selected) || XP.isFinite(self.selected)) && self.findItem(self.selected)) || null); }
 
             // Propagating
             if (target) { target.selected = self.selected; }
