@@ -408,6 +408,21 @@ This behavior is used to add selection capabilities on the context element.
             },
 
             /**
+             * If set to true, there are no selected items.
+             *
+             * @attribute empty-selection
+             * @type boolean
+             * @notifies
+             * @readonly
+             */
+            emptySelection: {
+                computed: '_computeEmptySelection(selection, multi)',
+                notify: true,
+                reflectToAttribute: true,
+                type: Boolean
+            },
+
+            /**
              * The attribute used as index.
              *
              * @attribute index-attribute
@@ -591,6 +606,13 @@ This behavior is used to add selection capabilities on the context element.
                 type: Boolean,
                 value: false
             }
+        },
+
+        /*********************************************************************/
+
+        // COMPUTER
+        _computeEmptySelection: function (selection, multi) {
+            return !selection || (multi && !selection.length);
         },
 
         /*********************************************************************/
