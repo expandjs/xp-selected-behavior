@@ -15,13 +15,13 @@ This behavior is used to add selection capabilities on the context element.
 @group behaviors
 @homepage http://expandjs.com/elements/xp-selected-behavior
 
-@behavior xp-array-behavior http://expandjs.com/elements/xp-array-behavior
-@behavior xp-targeter-behavior http://expandjs.com/elements/xp-targeter-behavior
+@behavior xp-array-behavior /bower_components/xp-array-behavior/xp-array-behavior.html
+@behavior xp-targeter-behavior /bower_components/xp-targeter-behavior/xp-targeter-behavior.html
 
 @dependency polymer Polymer/polymer#^1.0.0
-@dependency expandjs ExpandJS/expandjs#0.9.4
-@dependency xp-array-behavior ExpandJS/xp-array-behavior#0.9.4
-@dependency xp-targeter-behavior ExpandJS/xp-targeter-behavior#0.9.4
+@dependency expandjs ExpandJS/expandjs#0.9.5
+@dependency xp-array-behavior ExpandJS/xp-array-behavior#0.9.5
+@dependency xp-targeter-behavior ExpandJS/xp-targeter-behavior#0.9.5
 -->
 
 <link rel="import" href="../polymer/polymer.html">
@@ -196,18 +196,6 @@ This behavior is used to add selection capabilities on the context element.
         },
 
         /**
-         * Selects all items.
-         *
-         * @method selectAll
-         * @param {Function} [predicate]
-         * @returns {Array}
-         */
-        selectAll: function (predicate) {
-            var self = this, items = self.multi ? self.findItems(predicate) : [];
-            return XP.map(items, function (item) { return self.select(item, true); });
-        },
-
-        /**
          * Selects the next item.
          *
          * @method selectNext
@@ -246,19 +234,6 @@ This behavior is used to add selection capabilities on the context element.
         },
 
         /**
-         * Toggles active state on all items.
-         *
-         * @method switchAll
-         * @param {Function} [predicate]
-         * @param {boolean} [force = false]
-         * @returns {Array}
-         */
-        switchAll: function (predicate, force) {
-            var self = this, items = self.multi ? self.findItems(predicate) : [];
-            return XP.map(items, function (item) { return self.switch(item, force, true); });
-        },
-
-        /**
          * Unselects an item.
          *
          * @method unselect
@@ -287,19 +262,6 @@ This behavior is used to add selection capabilities on the context element.
             self._setSelecting(false);
 
             return item;
-        },
-
-        /**
-         * Unselects all items.
-         *
-         * @method unselectAll
-         * @param {Function} [predicate]
-         * @param {boolean} [force = false]
-         * @returns {Array}
-         */
-        unselectAll: function (predicate, force) {
-            var self = this, items = self.multi ? self.findItems(predicate) : [];
-            return XP.map(items, function (item) { return self.unselect(item, force, true); });
         },
 
         /*********************************************************************/
@@ -416,7 +378,7 @@ This behavior is used to add selection capabilities on the context element.
              * @readonly
              */
             emptySelection: {
-                computed: '_computeEmptySelection(selection, multi)',
+                computed: '_computeEmptySelection(selection)',
                 notify: true,
                 reflectToAttribute: true,
                 type: Boolean
@@ -490,20 +452,6 @@ This behavior is used to add selection capabilities on the context element.
             items: {
                 notify: true,
                 type: Array
-            },
-
-            /**
-             * If set to true, multi selection is allowed.
-             *
-             * @attribute multi
-             * @type boolean
-             * @default false
-             */
-            multi: {
-                observer: '_multiChanged',
-                reflectToAttribute: true,
-                type: Boolean,
-                value: false
             },
 
             /**
@@ -611,8 +559,8 @@ This behavior is used to add selection capabilities on the context element.
         /*********************************************************************/
 
         // COMPUTER
-        _computeEmptySelection: function (selection, multi) {
-            return !selection || (multi && !selection.length);
+        _computeEmptySelection: function (selection) {
+            return !selection || XP.isArray(selection, false);
         },
 
         /*********************************************************************/
@@ -627,19 +575,8 @@ This behavior is used to add selection capabilities on the context element.
             if (!post) { return; }
 
             // Selecting
-            if (XP.isString(self.defaultSelected) || XP.isFinite(self.defaultSelected)) { self.select(self.indexAttribute ? self.defaultSelected : XP.toIndex(self.defaultSelected, true)); return; }
-            if (XP.isString(self.selected) || XP.isFinite(self.selected)) { self.select(self.selected); }
-        },
-
-        // OBSERVER
-        _multiChanged: function (post) {
-
-            // Vars
-            var self = this;
-
-            // Setting
-            if (post) { self._setSelection(XP.toArray(self.selection, true)); } else if (XP.isArray(self.selection)) { self._setSelection(null); }
-            if (post) { self.selected = XP.toArray(self.selected, true); } else if (XP.isArray(self.selected)) { self.selected = null; }
+            if (XP.isAlphanumeric(self.defaultSelected)) { self.select(self.indexAttribute ? self.defaultSelected : XP.toIndex(self.defaultSelected, true)); return; }
+            if (XP.isAlphanumeric(self.selected)) { self.select(self.selected); }
         },
 
         /*********************************************************************/
@@ -706,7 +643,7 @@ This behavior is used to add selection capabilities on the context element.
                 target   = self.findTarget();
 
             // Setting
-            if (changing) { self._setSelection(self.multi ? self.overwrite('selection', XP.map(self.selected, function (identity) { return self.findItem(identity); })) : ((XP.isString(self.selected) || XP.isFinite(self.selected)) && self.findItem(self.selected)) || null); }
+            if (changing) { self._setSelection(self.multi ? self.overwrite('selection', XP.map(self.selected, function (identity) { return self.findItem(identity); })) : (XP.isAlphanumeric(self.selected) && self.findItem(self.selected)) || null); }
 
             // Propagating
             if (target) { target.selected = self.selected; }
